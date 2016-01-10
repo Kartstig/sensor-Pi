@@ -47,30 +47,23 @@ void setup() {
 }
 
 void loop() {
-
-  while(Serial.available()) {
-    volatile byte buffer;
-    buffer = Serial.read();
-    if(buffer == request_flag) {
+  byte request;
+  
+  if( radio.available()){
+    while (radio.available()) {
+      radio.read( &request, sizeof(byte) );
+    }
+   
+    if( request == request_flag ) {
       radio.stopListening();
-      radio.write(request_flag, sizeof(request_flag));
+      unsigned int payload = readData(sensorT1);
+      radio.write( &payload, sizeof(payload) );
       radio.startListening();
-      
-      while ( ! radio.available() ) {
-        if (micros() - started_waiting_at > 200000 ) {
-          timeout = true;
-          break;
-        }
-      }
-
-      if ( timeout ) {
-        Serial.println(F("Failed, response timed out."));
-      } else {
-        unsigned int payload;
-        radio.read( &payload, sizeof(payload int) );
-        Serial.print(payload);
-        Serial.print("\n");
-      }
+    }
   }
-  delay(10);
 }
+
+unsigned int readData(int pin) {
+  return analogRead(pin);
+}
+

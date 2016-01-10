@@ -57,12 +57,12 @@ void loop() {
     if( request == request_flag ) {
       radio.stopListening();
       unsigned int payload = readData(sensorT1);
-      radio.write( payload, sizeof(payload) );
+      radio.write( &payload, sizeof(payload) );
       radio.startListening();
     }
- }
+  }
 }
 
 unsigned int readData(int pin) {
-  return analogRead(pin)
+  return analogRead(pin);
 }
