@@ -26,6 +26,8 @@ RF24 radio(7,8);
 byte addresses[][6] = {"1Node","2Node"};
 
 void setup() {
+
+  Serial.begin(115200);
   
   radio.begin();
 
@@ -47,18 +49,31 @@ void setup() {
 }
 
 void loop() {
-  byte request;
-  
-  if( radio.available()){
-    while (radio.available()) {
-      radio.read( &request, sizeof(byte) );
-    }
-   
-    if( request == request_flag ) {
+  while(Serial.available()) {
+    volatile byte buffer;
+    buffer = Serial.read();
+    if(buffer == request_flag) {
+      Serial.println("Got Request. Forwarding to sensor");
       radio.stopListening();
-      unsigned int payload = readData(sensorT1);
-      radio.write( &payload, sizeof(payload) );
-      radio.startListening();
+      radio.write(&request_flag, sizeof(request_flag));
+      
+      boolean timeout = false;
+      unsigned long started_waiting_at = micros();
+
+      while ( ! radio.available() ) {                            // While nothing is received
+        if (micros() - started_waiting_at > 200000 ) {           // If waited longer than 200ms, indicate timeout and exit while loop
+          timeout = true;
+          break;
+        }
+      }
+
+      if ( timeout ) {                                            // Describe the results
+        Serial.println(F("Failed, response timed out."));
+      } else {
+        byte request;
+        radio.read( &request, sizeof(request) );
+        Serial.print(request, DEC);
+      }
     }
   }
 }
@@ -66,4 +81,3 @@ void loop() {
 unsigned int readData(int pin) {
   return analogRead(pin);
 }
-
