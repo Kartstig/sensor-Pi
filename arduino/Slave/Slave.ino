@@ -17,7 +17,7 @@ const byte request_flag = 0x7E;
 
 /****************** User Config ***************************/
 /***      Set this radio as radio number 0 or 1         ***/
-bool radioNumber = 1;
+bool radioNumber = 0;
 
 /* Hardware configuration: Set up nRF24L01 radio on SPI bus plus pins 7 & 8 */
 RF24 radio(7,8);
@@ -26,7 +26,9 @@ RF24 radio(7,8);
 byte addresses[][6] = {"1Node","2Node"};
 
 void setup() {
-  
+  pinMode(sensorT1,INPUT);
+
+  Serial.begin(115200);
   radio.begin();
 
   // Set the PA Level low to prevent power supply related issues since this is a
@@ -52,13 +54,21 @@ void loop() {
   if( radio.available()){
     while (radio.available()) {
       radio.read( &request, sizeof(byte) );
+      Serial.print("Read Request: ");
+      Serial.println(request, DEC);
     }
    
     if( request == request_flag ) {
+      Serial.println("Request Flag Received");
+      Serial.println();
       radio.stopListening();
       unsigned int payload = readData(sensorT1);
       radio.write( &payload, sizeof(payload) );
+      Serial.print("Payload Sent: ");
+      Serial.println(payload, DEC);
+      Serial.println ();
       radio.startListening();
+    
     }
   }
 }
