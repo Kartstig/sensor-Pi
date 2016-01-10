@@ -53,15 +53,15 @@ void loop() {
     volatile byte buffer;
     buffer = Serial.read();
     if(buffer == request_flag) {
-      Serial.println("Got Request. Forwarding to sensor");
       radio.stopListening();
       radio.write(&request_flag, sizeof(request_flag));
+      radio.startListening();
       
       boolean timeout = false;
       unsigned long started_waiting_at = micros();
 
       while ( ! radio.available() ) {                            // While nothing is received
-        if (micros() - started_waiting_at > 200000 ) {           // If waited longer than 200ms, indicate timeout and exit while loop
+        if (micros() - started_waiting_at > 2000000 ) {           // If waited longer than 200ms, indicate timeout and exit while loop
           timeout = true;
           break;
         }
@@ -70,7 +70,7 @@ void loop() {
       if ( timeout ) {                                            // Describe the results
         Serial.println(F("Failed, response timed out."));
       } else {
-        byte request;
+        int request;
         radio.read( &request, sizeof(request) );
         Serial.print(request, DEC);
       }
